@@ -25,7 +25,6 @@ class GameBoardTest {
     }
 
     @Test
-    // simple case where p1 will drop 4 tokens into 1st column and win
     public void test_ensurePlayersCannotPlayOnceGameIsOver() {
         // GIVEN
         GameBoard game = new GameBoard(PLAYERS);
@@ -45,7 +44,6 @@ class GameBoardTest {
     }
 
     @Test
-    // simple case where p1 will drop 4 tokens into 1st column and win
     public void testGetGameStatus_withSimpleGame() {
         // GIVEN
         GameBoard game = new GameBoard(PLAYERS);
@@ -72,7 +70,6 @@ class GameBoardTest {
     }
 
     @Test
-    // simple case where p1 will drop 4 tokens into 1st column and win
     public void testGetGame_withPlayerQuitting() {
         // GIVEN
         GameBoard game = new GameBoard(PLAYERS);
@@ -88,7 +85,6 @@ class GameBoardTest {
     }
 
     @Test
-    // simple case where p1 will drop 4 tokens into 1st column and win
     public void testGetGame_withPlayerQuitting_andPlayingAgain() {
         // GIVEN
         GameBoard game = new GameBoard(PLAYERS);
@@ -107,8 +103,7 @@ class GameBoardTest {
 
     }
 
-        @Test
-    // simple case where p1 will drop 4 tokens into 1st column and win
+    @Test
     public void testGetGame_withTooManyInOneColumn() {
         // GIVEN
         int sameColumn = 3;
@@ -129,28 +124,51 @@ class GameBoardTest {
     }
 
     @Test
-    // simple case where p1 will drop 4 tokens into 1st column and win
-    public void testGetGameStatus_withDrawnGame() {
+    public void testGetGameStatus_withColumnWin() {
         // GIVEN
         GameBoard game = new GameBoard(PLAYERS);
-        assertEquals("IN_PROGRESS", game.getGameStatus());
-        assertNull(game.getWinner());
-        assertEquals(0, game.getTotalMoves());
 
         // WHEN
-        for (int i = 0; i < 3; i++) {
-            game.postMove(P1, 0);
-            game.postMove(P2, 1);
-            assertEquals("IN_PROGRESS", game.getGameStatus());
-            assertNull(game.getWinner());
-            assertEquals(2*(i + 1), game.getTotalMoves());
-        }
-
-        // winnning move
         game.postMove(P1, 0);
+        game.postMove(P2, 1);
+        game.postMove(P1, 0);
+        game.postMove(P2, 1);
+        game.postMove(P1, 0);
+        game.postMove(P2, 1);
+
+        // random moves
+        game.postMove(P1,2);
+        game.postMove(P2,2);
+        game.postMove(P1,2);
+        game.postMove(P2,2);
+
+        // winning moves
+        game.postMove(P1, 0);
+
+        // THEN
         assertEquals("DONE", game.getGameStatus());
         assertEquals(P1, game.getWinner());
-        assertEquals(7, game.getTotalMoves());
     }
 
-}
+    @Test
+    public void testGetGameStatus_withRowWin() {
+        // GIVEN
+        GameBoard game = new GameBoard(PLAYERS);
+
+        game.postMove(P1, 0);
+        game.postMove(P2, 0);
+        game.postMove(P1, 1);
+        game.postMove(P2, 1);
+        game.postMove(P1, 2);
+        game.postMove(P2, 2);
+
+        // WHEN
+        // winning moves
+        game.postMove(P1, 3);
+
+        // THEN
+        assertEquals("DONE", game.getGameStatus());
+        assertEquals(P1, game.getWinner());
+    }
+
+    }

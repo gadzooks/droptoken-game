@@ -1,6 +1,8 @@
 package com._98point6.droptoken.model.game;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +17,7 @@ public class GameBoard {
     private final String[] players = new String[TOTAL_PLAYERS];
     private final String[][] matrix = new String[LENGTH][LENGTH];
     private final List<Move> moves = new ArrayList<>();
+    @Setter(AccessLevel.PRIVATE)
     private GameState state = GameState.IN_PROGRESS;
     @Getter
     private String winner = null;
@@ -81,15 +84,14 @@ public class GameBoard {
 
     public List<com._98point6.droptoken.dto.game.Move> getMoves(int from, int to) {
         if (from > to || from >= LENGTH || to >= LENGTH) {
-            // TODO throw exception ?
-            return new ArrayList<>();
+            throw new IllegalArgumentException(
+                    String.format("Invalid from:%d and/or to:%d provided", from, to));
         }
         List<com._98point6.droptoken.dto.game.Move> selectedMoves = new ArrayList<>();
 
         for (int i = from; i <= to ; i++) {
 
             Move move = moves.get(i);
-            int moveColumn = -1;
             com._98point6.droptoken.dto.game.Move moveDto =
                     new com._98point6.droptoken.dto.game.Move(
                             move.getMoveType().toString(),
@@ -106,8 +108,12 @@ public class GameBoard {
         return (column < 0 || column >= LENGTH);
     }
 
+    private boolean allSlotsFull() {
+        return (moves.size() == LENGTH*LENGTH);
+    }
+
     private boolean gameIsOver() {
-        return (winner != null);
+        return (winner != null || allSlotsFull());
     }
 
     private boolean invalidPlayer(String playerId) {
@@ -151,6 +157,11 @@ public class GameBoard {
 
         if(allRowsMatch) {
             setGameWonBy(playerId);
+            return;
+        }
+
+        if(allSlotsFull()) {
+            setState(GameState.DONE);
         }
     }
 
