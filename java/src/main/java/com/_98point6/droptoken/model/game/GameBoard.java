@@ -17,7 +17,8 @@ public class GameBoard {
     private final List<Move> moves = new ArrayList<>();
     private GameState state = GameState.IN_PROGRESS;
     @Getter
-    private String winner;
+    private String winner = null;
+    private String nextPlayer = null;
 
     public GameBoard(final List<String> players) {
         if(players.size() != TOTAL_PLAYERS) {
@@ -40,9 +41,18 @@ public class GameBoard {
         return state.toString();
     }
 
-    public String postMove(String playerId, Integer column) {
-        //TODO check playerId and column
-        //TODO validate game is not over
+    public String postMove(String playerId, int column) {
+        if(gameIsOver()) {
+            throw new IllegalArgumentException("Game is over. No more moves allowed");
+        }
+        if(invalidPlayer(playerId) || invalidColumn(column)) {
+            throw new IllegalArgumentException("Invalid input");
+        }
+        if(!thisPlayersTurn(playerId)) {
+            throw new IllegalArgumentException(
+                    String.format("PlayerId %s has already played", playerId)
+            );
+        }
         for (int row = 0; row < LENGTH; row++) {
             if(matrix[row][column] == null) {
                 matrix[row][column] = playerId;
@@ -52,11 +62,69 @@ public class GameBoard {
             }
         }
 
-        return null;
+        throw new IllegalArgumentException(
+                String.format("No more slots available for column %d", column));
     }
 
-    private void recordNextMove(String playerId, Integer row, Integer column) {
+    // player can quit any time they want
+    public void quit(String playerId) {
+        if(playerId.equals(players[0])) {
+            String winner = players[1];
+            setGameWonBy(winner);
+            moves.add(Move.quit(winner));
+        } else if (playerId.equals(players[1])) {
+            String winner = players[0];
+            setGameWonBy(winner);
+            moves.add(Move.quit(winner));
+        }
+    }
+
+    public List<com._98point6.droptoken.dto.game.Move> getMoves(int from, int to) {
+        if (from > to || from >= LENGTH || to >= LENGTH) {
+            // TODO throw exception ?
+            return new ArrayList<>();
+        }
+        List<com._98point6.droptoken.dto.game.Move> selectedMoves = new ArrayList<>();
+
+        for (int i = from; i <= to ; i++) {
+
+            Move move = moves.get(i);
+            int moveColumn = -1;
+            com._98point6.droptoken.dto.game.Move moveDto =
+                    new com._98point6.droptoken.dto.game.Move(
+                            move.getMoveType().toString(),
+                            move.getPlayerId(),
+                            move.getColumn());
+
+            selectedMoves.add(moveDto);
+        }
+
+        return selectedMoves;
+    }
+
+    private boolean invalidColumn(int column) {
+        return (column < 0 || column >= LENGTH);
+    }
+
+    private boolean gameIsOver() {
+        return (winner != null);
+    }
+
+    private boolean invalidPlayer(String playerId) {
+        return (!players[0].equals(playerId) && !players[1].equals(playerId));
+    }
+
+    private void setNextPlayer(String currentPlayerId) {
+        if(players[0].equals(currentPlayerId)) {
+            nextPlayer = players[1];
+        } else {
+            nextPlayer = players[0];
+        }
+    }
+
+    private void recordNextMove(String playerId, int row, int column) {
         moves.add(Move.play(playerId, row, column));
+        setNextPlayer(playerId);
 
         // all columns match
         boolean allColumnsMatch = true;
@@ -91,39 +159,8 @@ public class GameBoard {
         state = GameState.DONE;
     }
 
-    public void quit(String playerId) {
-        if(playerId.equals(players[0])) {
-            String winner = players[1];
-            setGameWonBy(winner);
-            moves.add(Move.quit(winner));
-        } else if (playerId.equals(players[1])) {
-            String winner = players[0];
-            setGameWonBy(winner);
-            moves.add(Move.quit(winner));
-        }
-    }
-
-    public List<com._98point6.droptoken.dto.game.Move> getMoves(int from, int to) {
-        if (from > to || from >= LENGTH || to >= LENGTH) {
-            // TODO throw exception ?
-            return new ArrayList<>();
-        }
-        List<com._98point6.droptoken.dto.game.Move> selectedMoves = new ArrayList<>();
-
-        for (int i = from; i <= to ; i++) {
-
-            Move move = moves.get(i);
-            int moveColumn = -1;
-            com._98point6.droptoken.dto.game.Move moveDto =
-                    new com._98point6.droptoken.dto.game.Move(
-                            move.getMoveType().toString(),
-                            move.getPlayerId(),
-                            move.getColumn());
-
-            selectedMoves.add(moveDto);
-        }
-
-        return selectedMoves;
+    private boolean thisPlayersTurn(String playerId) {
+        return (nextPlayer == null || nextPlayer.equals(playerId));
     }
 
     private enum GameState {

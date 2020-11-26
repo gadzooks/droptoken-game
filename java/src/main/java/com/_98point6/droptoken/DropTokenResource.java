@@ -2,7 +2,6 @@ package com._98point6.droptoken;
 
 import com._98point6.droptoken.dto.game.Move;
 import com._98point6.droptoken.model.*;
-import com._98point6.droptoken.model.game.GameStatus;
 import com._98point6.droptoken.service.DropTokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +10,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -46,16 +46,17 @@ public class DropTokenResource {
     @GET
     public Response getGameStatus(@PathParam("id") String gameId) {
         logger.info("getGameStatus: gameId = {}", gameId);
-        GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
-        GameStatus gs = dropTokenService.getGameState(gameId);
-        //TODO handle null case here
-        assert gs != null;
-        builder.state(gs.getState());
-        builder.players(gs.getPlayers());
-        builder.winner(gs.getWinner());
-        builder.moves(gs.getMoves());
 
-        return Response.ok(builder.build()).build();
+        Optional<GameStatusResponse> gs = dropTokenService.getGameState(gameId);
+
+        if(gs.isPresent()) {
+            return Response.ok(gs).build();
+        } else {
+            return Response.
+                    status(Response.Status.NOT_FOUND).
+                    build();
+        }
+
     }
 
     @Path("/{id}/{playerId}")
