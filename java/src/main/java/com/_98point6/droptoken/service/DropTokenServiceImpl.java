@@ -2,6 +2,7 @@ package com._98point6.droptoken.service;
 
 import com._98point6.droptoken.model.GameStatusResponse;
 import com._98point6.droptoken.model.game.GameBoard;
+import com._98point6.droptoken.model.game.GameBoardImpl;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,7 +11,7 @@ public class DropTokenServiceImpl implements DropTokenService {
     private  final Map<UUID, GameBoard> games = new HashMap<>();
 
     public  String createGame(List<String> players) {
-        GameBoard board = new GameBoard(players);
+        GameBoard board = new GameBoardImpl(players);
         UUID id = board.getId();
         games.put(id, board);
         return id.toString();

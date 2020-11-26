@@ -16,7 +16,7 @@ class GameBoardTest {
     // simple case where p1 will drop 4 tokens into 1st column and win
     public void test_ensurePlayersAlternate() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
         game.postMove(P1,0);
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -27,7 +27,7 @@ class GameBoardTest {
     @Test
     public void test_ensurePlayersCannotPlayOnceGameIsOver() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
         game.quit(P1);
 
         // THEN
@@ -46,7 +46,7 @@ class GameBoardTest {
     @Test
     public void testGetGameStatus_withSimpleGame() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
         assertEquals("IN_PROGRESS", game.getGameStatus());
         assertNull(game.getWinner());
         assertEquals(0, game.getTotalMoves());
@@ -72,7 +72,7 @@ class GameBoardTest {
     @Test
     public void testGetGame_withPlayerQuitting() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
         assertEquals("IN_PROGRESS", game.getGameStatus());
         assertNull(game.getWinner());
 
@@ -87,7 +87,7 @@ class GameBoardTest {
     @Test
     public void testGetGame_withPlayerQuitting_andPlayingAgain() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
 
         // WHEN
         game.quit(P2);
@@ -107,7 +107,7 @@ class GameBoardTest {
     public void testGetGame_withTooManyInOneColumn() {
         // GIVEN
         int sameColumn = 3;
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
         game.postMove(P2, sameColumn);
         game.postMove(P1, sameColumn);
         game.postMove(P2, sameColumn);
@@ -126,7 +126,7 @@ class GameBoardTest {
     @Test
     public void testGetGameStatus_withColumnWin() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
 
         // WHEN
         game.postMove(P1, 0);
@@ -153,7 +153,7 @@ class GameBoardTest {
     @Test
     public void testGetGameStatus_withRowWin() {
         // GIVEN
-        GameBoard game = new GameBoard(PLAYERS);
+        GameBoard game = new GameBoardImpl(PLAYERS);
 
         game.postMove(P1, 0);
         game.postMove(P2, 0);
