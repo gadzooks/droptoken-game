@@ -1,5 +1,7 @@
 package com._98point6.droptoken;
 
+import com._98point6.droptoken.service.DropTokenService;
+import com._98point6.droptoken.service.DropTokenServiceImpl;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -40,7 +42,8 @@ public class DropTokenApplication extends Application<DropTokenConfiguration> {
             environment.jersey().register(new JsonProcessingExceptionMapper());
             environment.jersey().register(new EarlyEofExceptionMapper());
 
-            final DropTokenResource resource = new DropTokenResource();
+            final DropTokenService dropTokenService = new DropTokenServiceImpl();
+            final DropTokenResource resource = new DropTokenResource(dropTokenService);
             environment.jersey().register(resource);
 
         }

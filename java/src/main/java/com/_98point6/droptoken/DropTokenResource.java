@@ -20,21 +20,23 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 public class DropTokenResource {
     private static final Logger logger = LoggerFactory.getLogger(DropTokenResource.class);
+    private final DropTokenService dropTokenService;
 
-    public DropTokenResource() {
+    public DropTokenResource(DropTokenService service) {
+        dropTokenService = service;
     }
 
     @GET
     public Response getGames() {
         GetGamesResponse.Builder builder = new GetGamesResponse.Builder();
-        builder.games(DropTokenService.getGames());
+        builder.games(dropTokenService.getGames());
         return Response.ok(builder.build()).build();
     }
 
     @POST
     public Response createNewGame(CreateGameRequest request) {
-        logger.info("request={}", request);
-        String newGameId = DropTokenService.createGame(request.getPlayers());
+        logger.info("createNewGame: request={}", request);
+        String newGameId = dropTokenService.createGame(request.getPlayers());
         CreateGameResponse.Builder builder = new CreateGameResponse.Builder();
         builder.gameId(newGameId);
         return Response.ok(builder.build()).build();
@@ -43,9 +45,9 @@ public class DropTokenResource {
     @Path("/{id}")
     @GET
     public Response getGameStatus(@PathParam("id") String gameId) {
-        logger.info("gameId = {}", gameId);
+        logger.info("getGameStatus: gameId = {}", gameId);
         GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
-        GameStatus gs = DropTokenService.getGameState(gameId);
+        GameStatus gs = dropTokenService.getGameState(gameId);
         //TODO handle null case here
         assert gs != null;
         builder.state(gs.getState());
@@ -59,7 +61,7 @@ public class DropTokenResource {
     @Path("/{id}/{playerId}")
     @POST
     public Response postMove(@PathParam("id")String gameId, @PathParam("playerId") String playerId, PostMoveRequest request) {
-        String moveLink = DropTokenService.nextMove(gameId, playerId, request.getColumn());
+        String moveLink = dropTokenService.nextMove(gameId, playerId, request.getColumn());
         PostMoveResponse.Builder builder = new PostMoveResponse.Builder();
         builder.moveLink(moveLink);
         logger.info("gameId={}, playerId={}, move={}", gameId, playerId, request);
@@ -69,14 +71,14 @@ public class DropTokenResource {
     @Path("/{id}/{playerId}")
     @DELETE
     public Response playerQuit(@PathParam("id")String gameId, @PathParam("playerId") String playerId) {
-        DropTokenService.quitGame(gameId, playerId);
+        dropTokenService.quitGame(gameId, playerId);
         logger.info("gameId={}, playerId={}", gameId, playerId);
         return Response.status(202).build();
     }
     @Path("/{id}/moves")
     @GET
     public Response getMoves(@PathParam("id") String gameId, @QueryParam("start") Integer start, @QueryParam("until") Integer until) {
-        List<Move> results = DropTokenService.getMoves(gameId, start, until);
+        List<Move> results = dropTokenService.getMoves(gameId, start, until);
         List<GetMoveResponse> moves = convertToMoveResponse(results);
 
         GetMovesResponse.Builder builder = new GetMovesResponse.Builder();
@@ -88,7 +90,7 @@ public class DropTokenResource {
     @Path("/{id}/moves/{moveId}")
     @GET
     public Response getMove(@PathParam("id") String gameId, @PathParam("moveId") Integer moveId) {
-        List<Move> results = DropTokenService.getMoves(gameId, moveId, moveId);
+        List<Move> results = dropTokenService.getMoves(gameId, moveId, moveId);
 
         // TODO check if moves == 1
         Move move = results.get(0);
