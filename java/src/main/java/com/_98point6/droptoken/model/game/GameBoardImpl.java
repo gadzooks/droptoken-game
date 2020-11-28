@@ -23,7 +23,7 @@ public class GameBoardImpl implements GameBoard{
     private String winner = null;
     private String nextPlayer = null;
 
-    public GameBoardImpl(final List<String> players, int rows, int columns) {
+    public GameBoardImpl(final List<String> players, int rows, int columns) throws MalformedGameRequestException {
         if(players.size() != TOTAL_PLAYERS || columns != LENGTH || rows != LENGTH) {
             throw new MalformedGameRequestException();
         }
@@ -65,7 +65,8 @@ public class GameBoardImpl implements GameBoard{
     }
 
     @Override
-    public String postMove(String playerId, int column) {
+    public String postMove(String playerId, int column) throws PlayerOutOfTurnException, InvalidGameOrPlayerException,
+            MalformedInputException, IllegalMoveException {
         if(gameIsOver()) {
             throw new MalformedInputException();
         }

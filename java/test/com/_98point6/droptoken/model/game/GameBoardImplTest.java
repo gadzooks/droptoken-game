@@ -1,5 +1,6 @@
 package com._98point6.droptoken.model.game;
 
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -14,6 +15,7 @@ class GameBoardImplTest {
     private static final int columns = 4;
     private static final int rows = 4;
 
+    @SneakyThrows
     @Test
     // simple case where p1 will drop 4 tokens into 1st column and win
     public void test_ensurePlayersAlternate() {
@@ -26,6 +28,7 @@ class GameBoardImplTest {
         });
     }
 
+    @SneakyThrows
     @Test
     public void test_ensurePlayersCannotPlayOnceGameIsOver() {
         // GIVEN
@@ -33,18 +36,19 @@ class GameBoardImplTest {
         game.quit(P1);
 
         // THEN
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(GameBoard.MalformedInputException.class, () -> {
             //WHEN
             game.postMove(P1,0);
         });
 
         // THEN
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(GameBoard.MalformedInputException.class, () -> {
             //WHEN
             game.postMove(P2,0);
         });
     }
 
+    @SneakyThrows
     @Test
     public void testGetGameStatus_withSimpleGame() {
         // GIVEN
@@ -71,6 +75,7 @@ class GameBoardImplTest {
         assertEquals(7, game.getTotalMoves());
     }
 
+    @SneakyThrows
     @Test
     public void testGetGame_withPlayerQuitting() {
         // GIVEN
@@ -86,6 +91,7 @@ class GameBoardImplTest {
         assertEquals(P1, game.getWinner());
     }
 
+    @SneakyThrows
     @Test
     public void testGetGame_withPlayerQuitting_andPlayingAgain() {
         // GIVEN
@@ -95,16 +101,14 @@ class GameBoardImplTest {
         game.quit(P2);
 
         // THEN
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(GameBoard.MalformedInputException.class, () -> {
             //WHEN
             game.postMove(P1,0);
         });
 
-        String expectedMessage = "Game is over. No more moves allowed";
-        assertEquals(expectedMessage, exception.getMessage());
-
     }
 
+    @SneakyThrows
     @Test
     public void testGetGame_withTooManyInOneColumn() {
         // GIVEN
@@ -122,6 +126,7 @@ class GameBoardImplTest {
         });
     }
 
+    @SneakyThrows
     @Test
     public void testGetGameStatus_withColumnWin() {
         // GIVEN
@@ -149,6 +154,7 @@ class GameBoardImplTest {
         assertEquals(P1, game.getWinner());
     }
 
+    @SneakyThrows
     @Test
     public void testGetGameStatus_withRowWin() {
         // GIVEN

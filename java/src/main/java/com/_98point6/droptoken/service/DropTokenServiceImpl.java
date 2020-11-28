@@ -47,12 +47,14 @@ public class DropTokenServiceImpl implements DropTokenService {
         GameBoard game = findById(gameId);
         try {
             return game.postMove(playerId, column);
-        } catch (GameBoard.IllegalMoveException e) {
-            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
         } catch (GameBoard.InvalidGameOrPlayerException e) {
             throw new DropTokenException(Response.SC_NOT_FOUND, e.getMessage(), e);
         } catch (GameBoard.PlayerOutOfTurnException e) {
             throw new DropTokenException(Response.SC_CONFLICT, e.getMessage(), e);
+        } catch (GameBoard.MalformedInputException e) {
+            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
+        } catch (GameBoard.IllegalMoveException e) {
+            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
         }
     }
 

@@ -34,6 +34,7 @@ public class DropTokenResourceTest {
     private static final DropTokenService SERVICE = new DropTokenServiceImpl();
     public static final ResourceExtension EXT = ResourceExtension.builder()
             .addResource(new DropTokenResource(SERVICE))
+            .addResource(new DropTokenExceptionMapper())
             .build();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -80,7 +81,7 @@ public class DropTokenResourceTest {
 
         // THEN response should be 200
         assertThat(getStatusResponse.getStatusInfo().getStatusCode()).
-                isEqualTo(Response.Status.OK.getStatusCode());
+                isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
     }
 
@@ -139,7 +140,7 @@ public class DropTokenResourceTest {
         checkGameStatus(resp.getGameId(),"DONE", P1);
 
         // neither player should be able to quit once game is over
-        makeAnInvalidMove(resp.getGameId(), P1, 0,7);
+        makeAnInvalidMove(resp.getGameId(), P1, 0);
     }
 
     @Test
@@ -175,17 +176,12 @@ public class DropTokenResourceTest {
         }
     }
 
-    private void makeAnInvalidMove(String gameId, String playerId, int column, int expectedMoveNumber) {
+    private void makeAnInvalidMove(String gameId, String playerId, int column) {
         Response move = EXT.target(String.format("/drop_token/%s/%s", gameId, playerId)).
                 request(MediaType.APPLICATION_JSON).
                 post(Entity.json(createGameMoveJson(column)));
         assertThat(move.getStatusInfo().getStatusCode()).
-                isEqualTo(Response.Status.OK.getStatusCode());
-
-        PostMoveResponse response = move.readEntity(PostMoveResponse.class);
-        assertThat(move.getStatusInfo().getStatusCode()).
-                isEqualTo(Response.Status.NOT_ACCEPTABLE.getStatusCode());
-
+                isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     private void makeAMove(String gameId, String playerId, int column, int expectedMoveNumber) {

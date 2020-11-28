@@ -12,7 +12,7 @@ public interface GameBoard {
     int getTotalMoves();
     List<String> getPlayers();
     GameState getGameState();
-    String postMove(String playerId, int column);
+    String postMove(String playerId, int column) throws PlayerOutOfTurnException, InvalidGameOrPlayerException, MalformedInputException, IllegalMoveException;
     String getWinner();
     // player can quit any time they want
     void quit(String playerId);
@@ -23,33 +23,39 @@ public interface GameBoard {
     String MALFORMED_GAME_REQUEST = "Malformed request.";
     String PLAYER_OUT_OF_TURN = "Player tried to post when it's not their turn.";
 
-    class IllegalMoveException extends RuntimeException {
+    class IllegalMoveException extends GameBoardException {
         public IllegalMoveException() {
             super(MALFORMED_INPUT);
         }
     }
 
-    class MalformedInputException extends RuntimeException {
+    class MalformedInputException extends GameBoardException {
         public MalformedInputException() {
             super(MALFORMED_INPUT);
         }
     }
 
-    class MalformedGameRequestException extends RuntimeException {
+    class MalformedGameRequestException extends GameBoardException {
         public MalformedGameRequestException() {
             super(MALFORMED_GAME_REQUEST);
         }
     }
 
-    class InvalidGameOrPlayerException extends RuntimeException {
+    class InvalidGameOrPlayerException extends GameBoardException {
         public InvalidGameOrPlayerException() {
             super(INVALID_GAME_OR_PLAYER);
         }
     }
 
-    class PlayerOutOfTurnException extends RuntimeException {
+    class PlayerOutOfTurnException extends GameBoardException {
         public PlayerOutOfTurnException() {
             super(PLAYER_OUT_OF_TURN);
+        }
+    }
+
+    class GameBoardException extends Exception {
+        public GameBoardException(String msg) {
+            super(msg);
         }
     }
 
