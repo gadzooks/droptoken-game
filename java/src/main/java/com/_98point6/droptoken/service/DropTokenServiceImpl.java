@@ -1,31 +1,33 @@
 package com._98point6.droptoken.service;
 
 import com._98point6.droptoken.dto.game.GameState;
+import com._98point6.droptoken.exception.DropTokenException;
 import com._98point6.droptoken.model.GameStatusResponse;
 import com._98point6.droptoken.model.game.GameBoard;
 import com._98point6.droptoken.model.game.GameBoardImpl;
+import org.eclipse.jetty.server.Response;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class DropTokenServiceImpl implements DropTokenService {
-    private  final Map<UUID, GameBoard> games = new HashMap<>();
+    private final Map<UUID, GameBoard> games = new HashMap<>();
 
     @Override
-    public Optional<GameBoard> createGame(List<String> players, int rows, int columns) {
-        System.out.println(players);
+    public GameBoard createGame(final List<String> players, final int rows, final int columns)
+            throws DropTokenException {
         try {
             GameBoard board = new GameBoardImpl(players, rows, columns);
             UUID id = board.getId();
             games.put(id, board);
-            return Optional.of(board);
-        } catch(IllegalArgumentException e) {
-            return Optional.empty();
+            return board;
+        } catch(GameBoard.MalformedGameRequestException e) {
+            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
         }
     }
 
     @Override
-    public  List<String> getGames() {
+    public List<String> getGames() {
         return games.
                 values().
                 stream().
@@ -35,64 +37,63 @@ public class DropTokenServiceImpl implements DropTokenService {
     }
 
     @Override
-    public GameState getGameStatus(String gameId) {
+    public GameState getGameStatus(String gameId) throws DropTokenException {
         GameBoard game = findById(gameId);
         return game.getGameState();
     }
 
     @Override
-    public String nextMove(String gameId, String playerId, int column) {
+    public String nextMove(String gameId, String playerId, int column) throws DropTokenException {
         GameBoard game = findById(gameId);
-        return game.postMove(playerId, column);
+        try {
+            return game.postMove(playerId, column);
+        } catch (GameBoard.IllegalMoveException e) {
+            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
+        } catch (GameBoard.InvalidGameOrPlayerException e) {
+            throw new DropTokenException(Response.SC_NOT_FOUND, e.getMessage(), e);
+        } catch (GameBoard.PlayerOutOfTurnException e) {
+            throw new DropTokenException(Response.SC_CONFLICT, e.getMessage(), e);
+        }
     }
 
     @Override
-    public GameBoard findById(String gameId) {
+    public GameBoard findById(String gameId) throws DropTokenException {
         GameBoard game = games.get(UUID.fromString(gameId));
         if (game == null) {
-            // TODO throw custom error
-            throw new IllegalArgumentException(
-                    String.format("invalid gameId %s specified", gameId));
+            throw new DropTokenException(Response.SC_NOT_FOUND, "Games/moves not found.");
         }
 
         return game;
     }
 
     @Override
-    public void quitGame(String gameId, String playerId) {
+    public void quitGame(String gameId, String playerId) throws DropTokenException {
         GameBoard game = findById(gameId);
         game.quit(playerId);
     }
 
     @Override
-    public GameBoard getGame(String gameId) {
+    public GameBoard getGame(String gameId) throws DropTokenException {
         return findById(gameId);
     }
 
     @Override
-    public Optional<GameStatusResponse> getGameState(String gameId) {
-        GameBoard game;
-        try {
-            game = games.get(UUID.fromString(gameId));
-            if(game == null) {
-                return Optional.empty();
-            }
+    public GameStatusResponse getGameState(String gameId) throws DropTokenException {
+        GameBoard game = findById(gameId);
+        // TODO figure out what to do about Optional vs throw exception
 
-            GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
-            builder.state(game.getGameState().toString());
-            builder.players(game.getPlayers());
-            builder.winner(game.getWinner());
-            // TODO
-            //builder.moves(game.getMoves());
+        GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
+        builder.state(game.getStatus());
+        builder.players(game.getPlayers());
+        builder.winner(game.getWinner());
+        builder.moves(game.getTotalMoves());
 
-            return Optional.ofNullable(builder.build());
-        } catch(IllegalArgumentException e) {
-            return Optional.empty();
-        }
+        return builder.build();
     }
 
     @Override
-    public  List<com._98point6.droptoken.dto.game.Move> getMoves(String gameId, int from, int until) {
+    public  List<com._98point6.droptoken.dto.game.Move> getMoves(String gameId, int from, int until)
+            throws DropTokenException {
         // TODO validate from, until, gameId
         GameBoard game = findById(gameId);
 

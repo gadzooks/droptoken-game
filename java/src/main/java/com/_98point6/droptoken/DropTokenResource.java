@@ -1,6 +1,7 @@
 package com._98point6.droptoken;
 
 import com._98point6.droptoken.dto.game.Move;
+import com._98point6.droptoken.exception.DropTokenException;
 import com._98point6.droptoken.model.*;
 import com._98point6.droptoken.model.game.GameBoard;
 import com._98point6.droptoken.service.DropTokenService;
@@ -12,7 +13,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -36,43 +36,28 @@ public class DropTokenResource {
     }
 
     @POST
-    public Response createNewGame(CreateGameRequest request) {
+    public Response createNewGame(CreateGameRequest request) throws DropTokenException {
         logger.info("createNewGame: request={}", request);
-        Optional<GameBoard> game =
+        GameBoard game =
                 dropTokenService.createGame(request.getPlayers(), request.getColumns(), request.getRows());
-        if(game.isPresent()) {
-            GameBoard board = game.get();
-            CreateGameResponse.Builder builder = new CreateGameResponse.Builder();
-            builder.gameId(board.getId().toString());
-            return Response.ok(builder.build()).build();
-        }
-
-        return Response.
-                status(Response.Status.BAD_REQUEST).
-                build();
+        CreateGameResponse.Builder builder = new CreateGameResponse.Builder();
+        builder.gameId(game.getId().toString());
+        return Response.ok(builder.build()).build();
     }
 
     @Path("/{id}")
     @GET
-    public Response getGameStatus(@PathParam("id") String gameId) {
+    public Response getGameStatus(@PathParam("id") String gameId) throws DropTokenException {
         logger.info("getGameStatus: gameId = {}", gameId);
 
-        Optional<GameStatusResponse> gs = dropTokenService.getGameState(gameId);
-
-        if(gs.isPresent()) {
-            return Response.ok(gs).build();
-        } else {
-            return Response.
-                    status(Response.Status.NOT_FOUND).
-                    build();
-        }
-
+        GameStatusResponse gs = dropTokenService.getGameState(gameId);
+        return Response.ok(gs).build();
     }
 
     @Path("/{id}/{playerId}")
     @POST
     public Response postMove(@PathParam("id") String gameId, @PathParam("playerId") String playerId,
-                             @Valid PostMoveRequest request) {
+                             @Valid PostMoveRequest request) throws DropTokenException {
         String moveLink = dropTokenService.nextMove(gameId, playerId, request.getColumn());
         PostMoveResponse.Builder builder = new PostMoveResponse.Builder();
         builder.moveLink(moveLink);
@@ -82,15 +67,17 @@ public class DropTokenResource {
 
     @Path("/{id}/{playerId}")
     @DELETE
-    public Response playerQuit(@PathParam("id") String gameId, @PathParam("playerId") String playerId) {
+    public Response playerQuit(@PathParam("id") String gameId, @PathParam("playerId") String playerId)
+            throws DropTokenException {
         dropTokenService.quitGame(gameId, playerId);
         logger.info("gameId={}, playerId={}", gameId, playerId);
         return Response.status(202).build();
     }
+
     @Path("/{id}/moves")
     @GET
     public Response getMoves(@PathParam("id") String gameId, @QueryParam("start") Integer start,
-                             @QueryParam("until") Integer until) {
+                             @QueryParam("until") Integer until) throws DropTokenException {
         List<Move> results = dropTokenService.getMoves(gameId, start, until);
         List<GetMoveResponse> moves = convertToMoveResponse(results);
 
@@ -102,7 +89,8 @@ public class DropTokenResource {
 
     @Path("/{id}/moves/{moveId}")
     @GET
-    public Response getMove(@PathParam("id") String gameId, @PathParam("moveId") Integer moveId) {
+    public Response getMove(@PathParam("id") String gameId, @PathParam("moveId") Integer moveId)
+            throws DropTokenException {
         List<Move> results = dropTokenService.getMoves(gameId, moveId, moveId);
 
         // TODO check if moves == 1

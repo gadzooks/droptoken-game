@@ -7,7 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GameBoardTest {
+class GameBoardImplTest {
     private static final List<String> PLAYERS = Arrays.asList("p1", "p2");
     private static final String P1 = "p1";
     private static final String P2 = "p2";
@@ -21,7 +21,7 @@ class GameBoardTest {
         GameBoard game = new GameBoardImpl(PLAYERS, columns, rows);
         game.postMove(P1,0);
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(GameBoard.PlayerOutOfTurnException.class, () -> {
             game.postMove(P1,0);
         });
     }
@@ -116,13 +116,10 @@ class GameBoardTest {
         game.postMove(P1, sameColumn);
 
         // THEN
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(GameBoard.IllegalMoveException.class, () -> {
             //WHEN
             game.postMove(P2, sameColumn);
         });
-
-        String expectedMessage = "No more slots available for column 3";
-        assertEquals(expectedMessage, exception.getMessage());
     }
 
     @Test

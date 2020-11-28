@@ -2,6 +2,9 @@
 # You can add any fields you need, be sure to update DropTokenConfiguration accordingly.
 template: some-crazy text
 
+server:
+  registerDefaultExceptionMappers: false
+
 logging:
   level: INFO
   appenders:

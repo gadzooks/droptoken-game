@@ -3,6 +3,7 @@ package com._98point6.droptoken.model.game;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,7 +25,10 @@ public class GameBoardImpl implements GameBoard{
 
     public GameBoardImpl(final List<String> players, int rows, int columns) {
         if(players.size() != TOTAL_PLAYERS || columns != LENGTH || rows != LENGTH) {
-            throw new IllegalArgumentException("Invalid inputs specified");
+            throw new MalformedGameRequestException();
+        }
+        if(players.get(0).isEmpty() || players.get(1).isEmpty() || players.get(0).equals(players.get(1))) {
+            throw new MalformedGameRequestException();
         }
         this.players[0] = players.get(0);
         this.players[1] = players.get(1);
@@ -63,15 +67,16 @@ public class GameBoardImpl implements GameBoard{
     @Override
     public String postMove(String playerId, int column) {
         if(gameIsOver()) {
-            throw new IllegalArgumentException("Game is over. No more moves allowed");
+            throw new MalformedInputException();
         }
-        if(invalidPlayer(playerId) || invalidColumn(column)) {
-            throw new IllegalArgumentException("Invalid input");
+        if(invalidColumn(column)) {
+            throw new MalformedInputException();
+        }
+        if(invalidPlayer(playerId)) {
+            throw new InvalidGameOrPlayerException();
         }
         if(!thisPlayersTurn(playerId)) {
-            throw new IllegalArgumentException(
-                    String.format("PlayerId %s has already played", playerId)
-            );
+            throw new PlayerOutOfTurnException();
         }
         for (int row = 0; row < LENGTH; row++) {
             if(matrix[row][column] == null) {
@@ -82,8 +87,7 @@ public class GameBoardImpl implements GameBoard{
             }
         }
 
-        throw new IllegalArgumentException(
-                String.format("No more slots available for column %d", column));
+        throw new IllegalMoveException();
     }
 
     // player can quit any time they want
@@ -154,7 +158,7 @@ public class GameBoardImpl implements GameBoard{
         // all columns match
         boolean allColumnsMatch = true;
         for (int i = 0; i < LENGTH; i++) {
-            if(matrix[i][column] != playerId) {
+            if(!StringUtils.equals(matrix[i][column], playerId)) {
                 allColumnsMatch = false;
                 break;
             }
@@ -168,7 +172,7 @@ public class GameBoardImpl implements GameBoard{
         // all rows match
         boolean allRowsMatch = true;
         for (int i = 0; i < LENGTH; i++) {
-            if(matrix[row][i] != playerId) {
+            if(!StringUtils.equals(matrix[row][i], playerId)) {
                 allRowsMatch = false;
                 break;
             }
