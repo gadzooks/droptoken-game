@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DropTokenService {
-    Optional<GameBoard> createGame(List<String> players, Integer columns, Integer rows);
+    Optional<GameBoard> createGame(List<String> players, int rows, int columns);
     List<String> getGames();
     GameState getGameStatus(String gameId);
-    String nextMove(String gameId, String playerId, Integer column);
+    String nextMove(String gameId, String playerId, int column);
+    GameBoard findById(String gameId);
     void quitGame(String gameId, String playerId);
     GameBoard getGame(String gameId);
     Optional<GameStatusResponse> getGameState(String gameId);

@@ -22,7 +22,7 @@ public class GameBoardImpl implements GameBoard{
     private String winner = null;
     private String nextPlayer = null;
 
-    public GameBoardImpl(final List<String> players, Integer columns, Integer rows) {
+    public GameBoardImpl(final List<String> players, int rows, int columns) {
         if(players.size() != TOTAL_PLAYERS || columns != LENGTH || rows != LENGTH) {
             throw new IllegalArgumentException("Invalid inputs specified");
         }

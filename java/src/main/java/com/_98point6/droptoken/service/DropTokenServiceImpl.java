@@ -11,9 +11,11 @@ import java.util.stream.Collectors;
 public class DropTokenServiceImpl implements DropTokenService {
     private  final Map<UUID, GameBoard> games = new HashMap<>();
 
-    public  Optional<GameBoard> createGame(List<String> players, Integer columns, Integer rows) {
+    @Override
+    public Optional<GameBoard> createGame(List<String> players, int rows, int columns) {
+        System.out.println(players);
         try {
-            GameBoard board = new GameBoardImpl(players, columns, rows);
+            GameBoard board = new GameBoardImpl(players, rows, columns);
             UUID id = board.getId();
             games.put(id, board);
             return Optional.of(board);
@@ -22,6 +24,7 @@ public class DropTokenServiceImpl implements DropTokenService {
         }
     }
 
+    @Override
     public  List<String> getGames() {
         return games.
                 values().
@@ -31,16 +34,19 @@ public class DropTokenServiceImpl implements DropTokenService {
                 collect(Collectors.toList());
     }
 
+    @Override
     public GameState getGameStatus(String gameId) {
         GameBoard game = findById(gameId);
         return game.getGameState();
     }
 
-    public String nextMove(String gameId, String playerId, Integer column) {
+    @Override
+    public String nextMove(String gameId, String playerId, int column) {
         GameBoard game = findById(gameId);
         return game.postMove(playerId, column);
     }
 
+    @Override
     public GameBoard findById(String gameId) {
         GameBoard game = games.get(UUID.fromString(gameId));
         if (game == null) {
@@ -52,15 +58,18 @@ public class DropTokenServiceImpl implements DropTokenService {
         return game;
     }
 
+    @Override
     public void quitGame(String gameId, String playerId) {
         GameBoard game = findById(gameId);
         game.quit(playerId);
     }
 
+    @Override
     public GameBoard getGame(String gameId) {
         return findById(gameId);
     }
 
+    @Override
     public Optional<GameStatusResponse> getGameState(String gameId) {
         GameBoard game;
         try {
@@ -82,6 +91,7 @@ public class DropTokenServiceImpl implements DropTokenService {
         }
     }
 
+    @Override
     public  List<com._98point6.droptoken.dto.game.Move> getMoves(String gameId, int from, int until) {
         // TODO validate from, until, gameId
         GameBoard game = findById(gameId);
