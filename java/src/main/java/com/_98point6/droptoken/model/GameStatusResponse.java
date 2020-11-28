@@ -18,7 +18,7 @@ public class GameStatusResponse {
 
     private GameStatusResponse(Builder builder) {
         this.players = Preconditions.checkNotNull(builder.players);
-        this.moves = Preconditions.checkNotNull(builder.moves);
+//        this.moves = Preconditions.checkNotNull(builder.moves);
         this.winner = builder.winner;
         this.state = Preconditions.checkNotNull(builder.state);
     }

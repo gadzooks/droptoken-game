@@ -2,10 +2,12 @@ package com._98point6.droptoken;
 
 import com._98point6.droptoken.dto.game.Move;
 import com._98point6.droptoken.model.*;
+import com._98point6.droptoken.model.game.GameBoard;
 import com._98point6.droptoken.service.DropTokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -36,10 +38,18 @@ public class DropTokenResource {
     @POST
     public Response createNewGame(CreateGameRequest request) {
         logger.info("createNewGame: request={}", request);
-        String newGameId = dropTokenService.createGame(request.getPlayers());
-        CreateGameResponse.Builder builder = new CreateGameResponse.Builder();
-        builder.gameId(newGameId);
-        return Response.ok(builder.build()).build();
+        Optional<GameBoard> game =
+                dropTokenService.createGame(request.getPlayers(), request.getColumns(), request.getRows());
+        if(game.isPresent()) {
+            GameBoard board = game.get();
+            CreateGameResponse.Builder builder = new CreateGameResponse.Builder();
+            builder.gameId(board.getId().toString());
+            return Response.ok(builder.build()).build();
+        }
+
+        return Response.
+                status(Response.Status.BAD_REQUEST).
+                build();
     }
 
     @Path("/{id}")
@@ -61,7 +71,8 @@ public class DropTokenResource {
 
     @Path("/{id}/{playerId}")
     @POST
-    public Response postMove(@PathParam("id")String gameId, @PathParam("playerId") String playerId, PostMoveRequest request) {
+    public Response postMove(@PathParam("id") String gameId, @PathParam("playerId") String playerId,
+                             @Valid PostMoveRequest request) {
         String moveLink = dropTokenService.nextMove(gameId, playerId, request.getColumn());
         PostMoveResponse.Builder builder = new PostMoveResponse.Builder();
         builder.moveLink(moveLink);
@@ -71,14 +82,15 @@ public class DropTokenResource {
 
     @Path("/{id}/{playerId}")
     @DELETE
-    public Response playerQuit(@PathParam("id")String gameId, @PathParam("playerId") String playerId) {
+    public Response playerQuit(@PathParam("id") String gameId, @PathParam("playerId") String playerId) {
         dropTokenService.quitGame(gameId, playerId);
         logger.info("gameId={}, playerId={}", gameId, playerId);
         return Response.status(202).build();
     }
     @Path("/{id}/moves")
     @GET
-    public Response getMoves(@PathParam("id") String gameId, @QueryParam("start") Integer start, @QueryParam("until") Integer until) {
+    public Response getMoves(@PathParam("id") String gameId, @QueryParam("start") Integer start,
+                             @QueryParam("until") Integer until) {
         List<Move> results = dropTokenService.getMoves(gameId, start, until);
         List<GetMoveResponse> moves = convertToMoveResponse(results);
 

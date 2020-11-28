@@ -1,5 +1,6 @@
 package com._98point6.droptoken.service;
 
+import com._98point6.droptoken.dto.game.GameState;
 import com._98point6.droptoken.model.GameStatusResponse;
 import com._98point6.droptoken.model.game.GameBoard;
 import com._98point6.droptoken.model.game.GameBoardImpl;
@@ -10,11 +11,15 @@ import java.util.stream.Collectors;
 public class DropTokenServiceImpl implements DropTokenService {
     private  final Map<UUID, GameBoard> games = new HashMap<>();
 
-    public  String createGame(List<String> players) {
-        GameBoard board = new GameBoardImpl(players);
-        UUID id = board.getId();
-        games.put(id, board);
-        return id.toString();
+    public  Optional<GameBoard> createGame(List<String> players, Integer columns, Integer rows) {
+        try {
+            GameBoard board = new GameBoardImpl(players, columns, rows);
+            UUID id = board.getId();
+            games.put(id, board);
+            return Optional.of(board);
+        } catch(IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     public  List<String> getGames() {
@@ -26,9 +31,9 @@ public class DropTokenServiceImpl implements DropTokenService {
                 collect(Collectors.toList());
     }
 
-    public String getGameStatus(String gameId) {
+    public GameState getGameStatus(String gameId) {
         GameBoard game = findById(gameId);
-        return game.getGameStatus();
+        return game.getGameState();
     }
 
     public String nextMove(String gameId, String playerId, Integer column) {
@@ -57,19 +62,24 @@ public class DropTokenServiceImpl implements DropTokenService {
     }
 
     public Optional<GameStatusResponse> getGameState(String gameId) {
-        GameBoard game = games.get(UUID.fromString(gameId));
-        if(game == null) {
+        GameBoard game;
+        try {
+            game = games.get(UUID.fromString(gameId));
+            if(game == null) {
+                return Optional.empty();
+            }
+
+            GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
+            builder.state(game.getGameState().toString());
+            builder.players(game.getPlayers());
+            builder.winner(game.getWinner());
+            // TODO
+            //builder.moves(game.getMoves());
+
+            return Optional.ofNullable(builder.build());
+        } catch(IllegalArgumentException e) {
             return Optional.empty();
         }
-
-        GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
-        builder.state(game.getGameStatus());
-        builder.players(game.getPlayers());
-        builder.winner(game.getWinner());
-        // TODO
-        //builder.moves(game.getMoves());
-
-        return Optional.ofNullable(builder.build());
     }
 
     public  List<com._98point6.droptoken.dto.game.Move> getMoves(String gameId, int from, int until) {

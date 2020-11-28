@@ -17,18 +17,23 @@ public class GameBoardImpl implements GameBoard{
     private final String[][] matrix = new String[LENGTH][LENGTH];
     private final List<Move> moves = new ArrayList<>();
     @Setter(AccessLevel.PRIVATE)
-    private GameBoardImpl.GameState state = GameBoardImpl.GameState.IN_PROGRESS;
+    private GameBoardImpl.GameState status = GameBoardImpl.GameState.IN_PROGRESS;
     @Getter
     private String winner = null;
     private String nextPlayer = null;
 
-    public GameBoardImpl(final List<String> players) {
-        if(players.size() != TOTAL_PLAYERS) {
-            throw new IllegalArgumentException(
-                    String.format("game needs exactly %d players, but %d were provided", players.size(), TOTAL_PLAYERS));
+    public GameBoardImpl(final List<String> players, Integer columns, Integer rows) {
+        if(players.size() != TOTAL_PLAYERS || columns != LENGTH || rows != LENGTH) {
+            throw new IllegalArgumentException("Invalid inputs specified");
         }
         this.players[0] = players.get(0);
         this.players[1] = players.get(1);
+    }
+
+    // useful for testing
+    @Override
+    public String getStatus() {
+        return status.toString();
     }
 
     @Override
@@ -47,8 +52,12 @@ public class GameBoardImpl implements GameBoard{
     }
 
     @Override
-    public String getGameStatus() {
-        return state.toString();
+    public com._98point6.droptoken.dto.game.GameState getGameState() {
+        com._98point6.droptoken.dto.game.GameState gameState =
+                new com._98point6.droptoken.dto.game.GameState(
+                        players, status.toString(), winner
+                );
+        return gameState;
     }
 
     @Override
@@ -171,13 +180,13 @@ public class GameBoardImpl implements GameBoard{
         }
 
         if(allSlotsFull()) {
-            setState(GameBoardImpl.GameState.DONE);
+            setStatus(GameBoardImpl.GameState.DONE);
         }
     }
 
     private void setGameWonBy(String playerId) {
         winner = playerId;
-        state = GameBoardImpl.GameState.DONE;
+        status = GameBoardImpl.GameState.DONE;
     }
 
     private boolean thisPlayersTurn(String playerId) {

@@ -1,5 +1,6 @@
 package com._98point6.droptoken.service;
 
+import com._98point6.droptoken.dto.game.GameState;
 import com._98point6.droptoken.model.GameStatusResponse;
 import com._98point6.droptoken.model.game.GameBoard;
 
@@ -7,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DropTokenService {
-    String createGame(List<String> players);
+    Optional<GameBoard> createGame(List<String> players, Integer columns, Integer rows);
     List<String> getGames();
-    String getGameStatus(String gameId);
+    GameState getGameStatus(String gameId);
     String nextMove(String gameId, String playerId, Integer column);
     void quitGame(String gameId, String playerId);
     GameBoard getGame(String gameId);
