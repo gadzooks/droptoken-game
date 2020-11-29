@@ -18,7 +18,7 @@ public class PostMoveResponse {
     @Override
     public String toString() {
         return new ToStringBuilder(this)
-                .append("moveLink", moveLink)
+                .append("move", moveLink)
                 .toString();
     }
 

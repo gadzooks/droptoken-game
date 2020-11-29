@@ -1,13 +1,14 @@
 package com._98point6.droptoken.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Preconditions;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  *
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class GameStatusResponse {
     private List<String> players;
     private Integer moves;
@@ -31,8 +32,8 @@ public class GameStatusResponse {
         return moves;
     }
 
-    public Optional<String> getWinner() {
-        return Optional.ofNullable(winner);
+    public String getWinner() {
+        return winner;
     }
 
     public String getState() {
