@@ -106,13 +106,13 @@ public class GameBoardImpl implements GameBoard{
     }
 
     @Override
-    public List<com._98point6.droptoken.dto.game.Move> getMoves(int from, int to) {
-        if (from > to || from >= LENGTH || to >= LENGTH) {
-            throw new IllegalArgumentException(
-                    String.format("Invalid from:%d and/or to:%d provided", from, to));
+    public List<com._98point6.droptoken.dto.game.Move> getMoves(int from, int to) throws MalformedInputException {
+        if (from > to || from >= LENGTH || to >= LENGTH || from < 0 || to < 0) {
+            throw new GameBoard.MalformedInputException();
         }
         List<com._98point6.droptoken.dto.game.Move> selectedMoves = new ArrayList<>();
 
+        to = Math.min(to, moves.size() - 1);
         for (int i = from; i <= to ; i++) {
 
             Move move = moves.get(i);

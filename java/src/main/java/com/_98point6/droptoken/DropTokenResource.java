@@ -78,12 +78,17 @@ public class DropTokenResource {
     @GET
     public Response getMoves(@PathParam("id") String gameId, @QueryParam("start") Integer start,
                              @QueryParam("until") Integer until) throws DropTokenException {
-        List<Move> results = dropTokenService.getMoves(gameId, start, until);
+        logger.info("gameId={}, start={}, until={}", gameId, start, until);
+        List<Move> results;
+        if(start == null || until == null) {
+            results = dropTokenService.getAllMoves(gameId);
+        } else {
+            results = dropTokenService.getMoves(gameId, start, until);
+        }
         List<GetMoveResponse> moves = convertToMoveResponse(results);
 
         GetMovesResponse.Builder builder = new GetMovesResponse.Builder();
         builder.moves(moves);
-        logger.info("gameId={}, start={}, until={}", gameId, start, until);
         return Response.ok(builder.build()).build();
     }
 

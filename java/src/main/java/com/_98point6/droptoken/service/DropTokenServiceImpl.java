@@ -7,7 +7,10 @@ import com._98point6.droptoken.model.game.GameBoard;
 import com._98point6.droptoken.model.game.GameBoardImpl;
 import org.eclipse.jetty.server.Response;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class DropTokenServiceImpl implements DropTokenService {
@@ -82,12 +85,12 @@ public class DropTokenServiceImpl implements DropTokenService {
     @Override
     public GameStatusResponse getGameState(String gameId) throws DropTokenException {
         GameBoard game = findById(gameId);
-        // TODO figure out what to do about Optional vs throw exception
 
         GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
         builder.state(game.getStatus());
         builder.players(game.getPlayers());
-        builder.winner(game.getWinner());
+        if(game.getWinner() != null)
+            builder.winner(game.getWinner());
         builder.moves(game.getTotalMoves());
 
         return builder.build();
@@ -96,9 +99,22 @@ public class DropTokenServiceImpl implements DropTokenService {
     @Override
     public  List<com._98point6.droptoken.dto.game.Move> getMoves(String gameId, int from, int until)
             throws DropTokenException {
-        // TODO validate from, until, gameId
         GameBoard game = findById(gameId);
 
-        return game.getMoves(from, until);
+        try {
+            return game.getMoves(from, until);
+        } catch (GameBoard.MalformedInputException e) {
+            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public List<com._98point6.droptoken.dto.game.Move> getAllMoves(String gameId) throws DropTokenException {
+        GameBoard game = findById(gameId);
+        try {
+            return game.getMoves(0, game.getTotalMoves());
+        } catch (GameBoard.MalformedInputException e) {
+            throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
+        }
     }
 }

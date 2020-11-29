@@ -17,4 +17,5 @@ public interface DropTokenService {
     GameBoard getGame(String gameId) throws DropTokenException;
     GameStatusResponse getGameState(String gameId) throws DropTokenException;
     List<com._98point6.droptoken.dto.game.Move> getMoves(String gameId, int from, int until) throws DropTokenException;
+    List<com._98point6.droptoken.dto.game.Move> getAllMoves(String gameId) throws DropTokenException;
 }

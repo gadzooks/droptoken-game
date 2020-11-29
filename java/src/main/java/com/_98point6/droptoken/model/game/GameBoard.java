@@ -16,7 +16,7 @@ public interface GameBoard {
     String getWinner();
     // player can quit any time they want
     void quit(String playerId);
-    List<Move> getMoves(int from, int to);
+    List<Move> getMoves(int from, int to) throws MalformedInputException;
 
     String INVALID_GAME_OR_PLAYER = "Game not found or player is not a part of it.";
     String MALFORMED_INPUT = "Malformed input. Illegal move.";

@@ -169,9 +169,9 @@ public class DropTokenResourceTest {
         GameStatusResponse response = move.readEntity(GameStatusResponse.class);
         assertThat(response.getState()).isEqualTo(expectedState);
         if(expectedWinner == null) {
-            assertFalse(response.getWinner().isPresent());
+            assertFalse(response.getWinner() != null);
         } else {
-            String winner = response.getWinner().get();
+            String winner = response.getWinner();
             assertThat(winner).isEqualTo(expectedWinner);
         }
     }
