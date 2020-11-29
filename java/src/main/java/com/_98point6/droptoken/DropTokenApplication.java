@@ -5,6 +5,7 @@ import com._98point6.droptoken.serializer.GameStatusResponseSerializer;
 import com._98point6.droptoken.service.DropTokenService;
 import com._98point6.droptoken.service.DropTokenServiceImpl;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -36,15 +37,8 @@ public class DropTokenApplication extends Application<DropTokenConfiguration> {
         public void run(DropTokenConfiguration configuration,
                 Environment environment) {
 
-
             // set up jackson serialization
-            final SimpleModule gameStatusResponseModule = new SimpleModule().
-                   addSerializer(GameStatusResponse.class, new GameStatusResponseSerializer(GameStatusResponse.class));
-            environment.getObjectMapper()
-                    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                    .registerModule(gameStatusResponseModule)
-                    .registerModule(new Jdk8Module());
-            environment.getObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+            setUpJackson(environment.getObjectMapper());
 
             environment.jersey().register(new DropTokenExceptionMapper());
             environment.jersey().register(new JerseyViolationExceptionMapper());
@@ -54,7 +48,19 @@ public class DropTokenApplication extends Application<DropTokenConfiguration> {
             final DropTokenService dropTokenService = new DropTokenServiceImpl();
             final DropTokenResource resource = new DropTokenResource(dropTokenService);
             environment.jersey().register(resource);
+        }
 
+        // so that we can use the same setup in testing the resource
+        public static ObjectMapper setUpJackson(ObjectMapper objectMapper) {
+            final SimpleModule gameStatusResponseModule = new SimpleModule().
+                    addSerializer(GameStatusResponse.class, new GameStatusResponseSerializer(GameStatusResponse.class));
+
+            objectMapper
+                    .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
+                    .registerModule(gameStatusResponseModule)
+                    .registerModule(new Jdk8Module());
+            objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+            return objectMapper;
         }
 
 }

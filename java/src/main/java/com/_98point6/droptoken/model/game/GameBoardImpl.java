@@ -97,11 +97,11 @@ public class GameBoardImpl implements GameBoard{
         if(playerId.equals(players[0])) {
             String winner = players[1];
             setGameWonBy(winner);
-            moves.add(Move.quit(winner));
+            moves.add(Move.quit(playerId));
         } else if (playerId.equals(players[1])) {
             String winner = players[0];
             setGameWonBy(winner);
-            moves.add(Move.quit(winner));
+            moves.add(Move.quit(playerId));
         }
     }
 
