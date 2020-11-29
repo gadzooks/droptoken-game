@@ -45,14 +45,6 @@ public class DropTokenResource {
         return Response.ok(builder.build()).build();
     }
 
-    @Path("/{id}")
-    @GET
-    public Response getGameStatus(@PathParam("id") String gameId) throws DropTokenException {
-        logger.info("getGameStatus: gameId = {}", gameId);
-
-        GameStatusResponse gs = dropTokenService.getGameState(gameId);
-        return Response.ok(gs).build();
-    }
 
     @Path("/{id}/{playerId}")
     @POST
@@ -109,8 +101,18 @@ public class DropTokenResource {
         builder.type(move.getMoveType());
 
         logger.info("gameId={}, moveId={}", gameId, moveId);
-        return Response.ok(new GetMoveResponse()).build();
+        return Response.ok(builder.build()).build();
     }
+
+    @Path("/{id}")
+    @GET
+    public Response getGameStatus(@PathParam("id") String gameId) throws DropTokenException {
+        logger.info("getGameStatus: gameId = {}", gameId);
+
+        GameStatusResponse gs = dropTokenService.getGameState(gameId);
+        return Response.ok(gs).build();
+    }
+
 
     private List<GetMoveResponse> convertToMoveResponse(List<Move> moves) {
         return moves.stream().
