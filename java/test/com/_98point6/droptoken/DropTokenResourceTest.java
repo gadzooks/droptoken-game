@@ -8,7 +8,6 @@ import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.dropwizard.testing.junit5.ResourceExtension;
 import lombok.SneakyThrows;
 import lombok.var;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -33,11 +32,6 @@ public class DropTokenResourceTest {
             .addResource(new DropTokenExceptionMapper())
             .build();
     private static final ObjectMapper OBJECT_MAPPER = DropTokenApplication.setUpJackson(new ObjectMapper());
-
-    @BeforeEach
-    public void beforeEach() {
-//        game = new GameBoardImpl(PLAYERS, 4, 4);
-    }
 
     @Test
     public void testGetGames() {
@@ -140,14 +134,6 @@ public class DropTokenResourceTest {
     }
 
     @Test
-    public void testPostMove() {
-    }
-
-    @Test
-    public void testPlayerQuit() {
-    }
-
-    @Test
     public void testGetMoves() {
         // GIVEN
         String gameId = callCreateGame();
@@ -185,7 +171,7 @@ public class DropTokenResourceTest {
         getMovesResp = callGetMoves(gameId, -1, -1);
         assertThat(getMovesResp.getMoves().size()).isEqualTo(3);
         mResp = getMovesResp.getMoves().get(2);
-        // FIXME this still fails
+        // FIXME this still fails in test but works via Postman
         //assertFalse(column.isPresent());
         assertThat(mResp.getPlayer()).isEqualTo(P2);
         assertThat(mResp.getType()).isEqualTo("QUIT");
@@ -194,10 +180,6 @@ public class DropTokenResourceTest {
     @Test
     public void twoGamesAtSameTime() {
         //FIXME todo
-    }
-
-    @Test
-    public void testGetMove() {
     }
 
     private void quitGame(String gameId, String playerId) {
