@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 public class DropTokenResource {
     private static final Logger logger = LoggerFactory.getLogger(DropTokenResource.class);
+
     private final DropTokenService dropTokenService;
 
     public DropTokenResource(DropTokenService service) {
