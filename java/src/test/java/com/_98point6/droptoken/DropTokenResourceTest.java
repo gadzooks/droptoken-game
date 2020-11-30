@@ -130,13 +130,13 @@ public class DropTokenResourceTest {
         checkGameStatus(resp.getGameId(),"DONE", P1);
 
         // neither player should be able to quit once game is over
-        makeAnInvalidMove(resp.getGameId(), P1, 0);
+        makeAnInvalidMove(resp.getGameId(), P1, 0, Response.Status.BAD_REQUEST);
     }
 
     @Test
     public void testGetMoves() {
         // GIVEN
-        String gameId = callCreateGame();
+        String gameId = callCreateGame(P1, P2);
 
         // WHEN, THEN
         GetMovesResponse getMovesResp = callGetMoves(gameId, -1, -1);
@@ -179,7 +179,37 @@ public class DropTokenResourceTest {
 
     @Test
     public void twoGamesAtSameTime() {
-        //FIXME todo
+        String gameId1 = callCreateGame("p1", "p2");
+        String gameId2 = callCreateGame("p1", "p3");
+
+        checkGameStatus(gameId1,"IN_PROGRESS", null);
+        checkGameStatus(gameId2,"IN_PROGRESS", null);
+
+        // p1 makes a move in both games
+        makeAMove(gameId1, "p1", 0,1);
+        makeAMove(gameId2, "p1", 0,1);
+
+        // opponents make a move in both games
+        makeAMove(gameId1, "p2", 0,2);
+        makeAMove(gameId2, "p3", 0,2);
+
+        //p2 tries to make a move in game 2 (which is NOT his game)
+        makeAnInvalidMove(gameId2,"p2", 0, Response.Status.NOT_FOUND);
+
+        //p3 tries to make a move in game 1 (which is NOT his game)
+        makeAnInvalidMove(gameId1,"p3", 0, Response.Status.NOT_FOUND);
+
+        // p1 quits game 2
+        quitGame(gameId2, "p1");
+        // game 1 continues
+        makeAMove(gameId1, "p1", 0,3);
+
+        // p1 tries to make a move in game2, which is DONE
+        makeAnInvalidMove(gameId2,"p1", 0, Response.Status.BAD_REQUEST);
+
+        // p2 quits game
+        quitGame(gameId1, "p2");
+        makeAnInvalidMove(gameId1,"p2", 0, Response.Status.BAD_REQUEST);
     }
 
     private void quitGame(String gameId, String playerId) {
@@ -190,10 +220,10 @@ public class DropTokenResourceTest {
                 isEqualTo(Response.Status.ACCEPTED.getStatusCode());
     }
 
-    private String callCreateGame() {
+    private String callCreateGame(String p1, String p2) {
         Response response = EXT.target("/drop_token").
                 request(MediaType.APPLICATION_JSON).
-                post(Entity.json(createGameJson(P1, P2)));
+                post(Entity.json(createGameJson(p1, p2)));
         CreateGameResponse resp = response.readEntity(CreateGameResponse.class);
         return resp.getGameId();
     }
@@ -215,12 +245,12 @@ public class DropTokenResourceTest {
         }
     }
 
-    private void makeAnInvalidMove(String gameId, String playerId, int column) {
+    private void makeAnInvalidMove(String gameId, String playerId, int column, Response.Status status) {
         Response move = EXT.target(String.format("/drop_token/%s/%s", gameId, playerId)).
                 request(MediaType.APPLICATION_JSON).
                 post(Entity.json(createGameMoveJson(column)));
         assertThat(move.getStatusInfo().getStatusCode()).
-                isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+                isEqualTo(status.getStatusCode());
     }
 
     private void makeAMove(String gameId, String playerId, int column, int expectedMoveNumber) {
