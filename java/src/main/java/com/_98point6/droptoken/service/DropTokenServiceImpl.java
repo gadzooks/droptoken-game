@@ -14,7 +14,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class DropTokenServiceImpl implements DropTokenService {
-    private final Map<UUID, GameBoard> games = new HashMap<>();
+    // if multiple instances of Service are created they all need to share the same games map so
+    // it needs to be declared as static
+    private static final Map<UUID, GameBoard> games = new HashMap<>();
 
     @Override
     public GameBoard createGame(final List<String> players, final int rows, final int columns)
@@ -63,6 +65,7 @@ public class DropTokenServiceImpl implements DropTokenService {
 
     @Override
     public GameBoard findById(String gameId) throws DropTokenException {
+        // catch IllegalArgumentException in fromString
         GameBoard game = games.get(UUID.fromString(gameId));
         if (game == null) {
             throw new DropTokenException(Response.SC_NOT_FOUND, "Games/moves not found.");
