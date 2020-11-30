@@ -5,23 +5,27 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@ThreadSafe
 public class GameBoardImpl implements GameBoard{
     private static final int LENGTH = 4;
     private static final int TOTAL_PLAYERS = 2;
 
     private final UUID id = UUID.randomUUID();
     private final String[] players = new String[TOTAL_PLAYERS];
-    private final String[][] matrix = new String[LENGTH][LENGTH];
-    private final List<Move> moves = new ArrayList<>();
+
+    //mutable state, these may need to be synchronized
+    private volatile List<Move> moves = new ArrayList<>();
+    private volatile String[][] matrix = new String[LENGTH][LENGTH];
     @Setter(AccessLevel.PRIVATE)
-    private GameBoardImpl.GameState status = GameBoardImpl.GameState.IN_PROGRESS;
+    private volatile GameBoardImpl.GameState status = GameBoardImpl.GameState.IN_PROGRESS;
     @Getter
-    private String winner = null;
-    private String nextPlayer = null;
+    private volatile String winner = null;
+    private volatile String nextPlayer = null;
 
     public GameBoardImpl(final List<String> players, int rows, int columns) throws MalformedGameRequestException {
         if(players.size() != TOTAL_PLAYERS || columns != LENGTH || rows != LENGTH) {
@@ -34,9 +38,9 @@ public class GameBoardImpl implements GameBoard{
         this.players[1] = players.get(1);
     }
 
-    // useful for testing
     @Override
-    public String getStatus() {
+    // synchronized since accessing mutable state
+    public synchronized String getStatus() {
         return status.toString();
     }
 
@@ -46,7 +50,8 @@ public class GameBoardImpl implements GameBoard{
     }
 
     @Override
-    public int getTotalMoves() {
+    // synchronized since accessing mutable state
+    public synchronized int getTotalMoves() {
         return moves.size();
     }
 
@@ -56,7 +61,8 @@ public class GameBoardImpl implements GameBoard{
     }
 
     @Override
-    public com._98point6.droptoken.dto.game.GameState getGameState() {
+    // synchronized since accessing mutable state
+    public synchronized com._98point6.droptoken.dto.game.GameState getGameState() {
         com._98point6.droptoken.dto.game.GameState gameState =
                 new com._98point6.droptoken.dto.game.GameState(
                         players, status.toString(), winner
@@ -65,7 +71,8 @@ public class GameBoardImpl implements GameBoard{
     }
 
     @Override
-    public String postMove(String playerId, int column) throws PlayerOutOfTurnException, InvalidGameOrPlayerException,
+    // synchronized since updating mutable state
+    public synchronized String postMove(String playerId, int column) throws PlayerOutOfTurnException, InvalidGameOrPlayerException,
             MalformedInputException, IllegalMoveException {
         if(gameIsOver()) {
             throw new MalformedInputException();
@@ -93,7 +100,8 @@ public class GameBoardImpl implements GameBoard{
 
     // player can quit any time they want
     @Override
-    public void quit(String playerId) {
+    // synchronized since updating mutable state
+    public synchronized void quit(String playerId) {
         if(playerId.equals(players[0])) {
             String winner = players[1];
             setGameWonBy(winner);
@@ -112,17 +120,19 @@ public class GameBoardImpl implements GameBoard{
         }
         List<com._98point6.droptoken.dto.game.Move> selectedMoves = new ArrayList<>();
 
-        to = Math.min(to, moves.size() - 1);
-        for (int i = from; i <= to ; i++) {
+        synchronized(this) {
+            to = Math.min(to, moves.size() - 1);
+            for (int i = from; i <= to ; i++) {
 
-            Move move = moves.get(i);
-            com._98point6.droptoken.dto.game.Move moveDto =
-                    new com._98point6.droptoken.dto.game.Move(
-                            move.getMoveType().toString(),
-                            move.getPlayerId(),
-                            move.getColumn());
+                Move move = moves.get(i);
+                com._98point6.droptoken.dto.game.Move moveDto =
+                        new com._98point6.droptoken.dto.game.Move(
+                                move.getMoveType().toString(),
+                                move.getPlayerId(),
+                                move.getColumn());
 
-            selectedMoves.add(moveDto);
+                selectedMoves.add(moveDto);
+            }
         }
 
         return selectedMoves;
@@ -132,11 +142,11 @@ public class GameBoardImpl implements GameBoard{
         return (column < 0 || column >= LENGTH);
     }
 
-    private boolean allSlotsFull() {
+    private synchronized boolean allSlotsFull() {
         return (moves.size() == LENGTH*LENGTH);
     }
 
-    private boolean gameIsOver() {
+    private synchronized boolean gameIsOver() {
         return (winner != null || allSlotsFull());
     }
 
@@ -144,7 +154,7 @@ public class GameBoardImpl implements GameBoard{
         return (!players[0].equals(playerId) && !players[1].equals(playerId));
     }
 
-    private void setNextPlayer(String currentPlayerId) {
+    private synchronized void setNextPlayer(String currentPlayerId) {
         if(players[0].equals(currentPlayerId)) {
             nextPlayer = players[1];
         } else {
@@ -152,7 +162,7 @@ public class GameBoardImpl implements GameBoard{
         }
     }
 
-    private void recordNextMove(String playerId, int row, int column) {
+    private synchronized void recordNextMove(String playerId, int row, int column) {
         moves.add(Move.play(playerId, row, column));
         setNextPlayer(playerId);
 
@@ -189,12 +199,12 @@ public class GameBoardImpl implements GameBoard{
         }
     }
 
-    private void setGameWonBy(String playerId) {
+    private synchronized void setGameWonBy(String playerId) {
         winner = playerId;
         status = GameBoardImpl.GameState.DONE;
     }
 
-    private boolean thisPlayersTurn(String playerId) {
+    private synchronized boolean thisPlayersTurn(String playerId) {
         return (nextPlayer == null || nextPlayer.equals(playerId));
     }
 
