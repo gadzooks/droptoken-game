@@ -21,25 +21,13 @@ public class DropTokenServiceImpl implements DropTokenService {
     // volatile : we dont want threads caching games since games can be changed by other threads.
     private static volatile Map<UUID, GameBoard> games = new ConcurrentHashMap<>();
 
-    private static synchronized void addGameSynchronized(UUID id, GameBoard game) {
-        games.put(id, game);
-    }
-
-    private static synchronized GameBoard getGameSynchronized(UUID id) {
-        return games.get(id);
-    }
-
-    private static synchronized Map<UUID, GameBoard> getGamesSynchronized() {
-        return games;
-    }
-
     @Override
     public GameBoard createGame(final List<String> players, final int rows, final int columns)
             throws DropTokenException {
         try {
             final GameBoard board = new GameBoardImpl(players, rows, columns);
             final UUID id = board.getId();
-            addGameSynchronized(id, board);
+            addGame(id, board);
             return board;
         } catch(GameBoard.MalformedGameRequestException e) {
             throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
@@ -48,7 +36,7 @@ public class DropTokenServiceImpl implements DropTokenService {
 
     @Override
     public List<String> getGames() {
-        return getGamesSynchronized().
+        return getAllGames().
                 values().
                 stream().
                 map(GameBoard::getId).
@@ -66,7 +54,6 @@ public class DropTokenServiceImpl implements DropTokenService {
     public String nextMove(String gameId, String playerId, int column) throws DropTokenException {
         GameBoard game = findById(gameId);
         try {
-            // TODO needs to be synchronized
             return game.postMove(playerId, column);
         } catch (GameBoard.InvalidGameOrPlayerException e) {
             throw new DropTokenException(Response.SC_NOT_FOUND, e.getMessage(), e);
@@ -83,7 +70,7 @@ public class DropTokenServiceImpl implements DropTokenService {
     public GameBoard findById(String gameId) throws DropTokenException {
         // catch IllegalArgumentException in fromString
         UUID id = UUID.fromString(gameId);
-        GameBoard game = getGameSynchronized(id);
+        GameBoard game = getGame(id);
         if (game == null) {
             throw new DropTokenException(Response.SC_NOT_FOUND, "Games/moves not found.");
         }
@@ -94,7 +81,6 @@ public class DropTokenServiceImpl implements DropTokenService {
     @Override
     public void quitGame(String gameId, String playerId) throws DropTokenException {
         GameBoard game = findById(gameId);
-        // TODO needs to be synchronized
         game.quit(playerId);
     }
 
@@ -108,10 +94,8 @@ public class DropTokenServiceImpl implements DropTokenService {
         GameBoard game = findById(gameId);
 
         GameStatusResponse.Builder builder = new GameStatusResponse.Builder();
-        // synchronize all this against the game ?
         builder.state(game.getStatus());
         builder.players(game.getPlayers());
-        // TODO needs to be synchronized
         if(game.getWinner() != null)
             builder.winner(game.getWinner());
         builder.moves(game.getTotalMoves());
@@ -125,7 +109,6 @@ public class DropTokenServiceImpl implements DropTokenService {
         GameBoard game = findById(gameId);
 
         try {
-            // TODO needs to be synchronized
             return game.getMoves(from, until);
         } catch (GameBoard.MalformedInputException e) {
             throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
@@ -136,10 +119,21 @@ public class DropTokenServiceImpl implements DropTokenService {
     public List<com._98point6.droptoken.dto.game.Move> getAllMoves(String gameId) throws DropTokenException {
         GameBoard game = findById(gameId);
         try {
-            // TODO needs to be synchronized
             return game.getMoves(0, game.getTotalMoves());
         } catch (GameBoard.MalformedInputException e) {
             throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
         }
+    }
+
+    private static void addGame(UUID id, GameBoard game) {
+        games.put(id, game);
+    }
+
+    private static GameBoard getGame(UUID id) {
+        return games.get(id);
+    }
+
+    private static Map<UUID, GameBoard> getAllGames() {
+        return games;
     }
 }
