@@ -176,4 +176,41 @@ class GameBoardImplTest {
         assertEquals(P1, game.getWinner());
     }
 
+    @SneakyThrows
+    @Test
+    public void testGetGame_withDraw() {
+        // GIVEN
+        GameBoard game = new GameBoardImpl(PLAYERS, columns, rows);
+        assertEquals("IN_PROGRESS", game.getStatus());
+        assertNull(game.getWinner());
+
+        // WHEN
+        // fill up row 0
+        game.postMove(P1, 0);
+        game.postMove(P2, 1);
+        game.postMove(P1, 2);
+        game.postMove(P2, 3);
+
+        // fill up row 1
+        game.postMove(P1, 0);
+        game.postMove(P2, 1);
+        game.postMove(P1, 2);
+        game.postMove(P2, 3);
+
+        // fill up row 2
+        game.postMove(P1, 3);
+        game.postMove(P2, 2);
+        game.postMove(P1, 1);
+        game.postMove(P2, 0);
+
+        // fill up row 2
+        game.postMove(P1, 3);
+        game.postMove(P2, 2);
+        game.postMove(P1, 1);
+        game.postMove(P2, 0);
+
+        assertEquals("DONE", game.getStatus());
+        assertNull(game.getWinner());
     }
+
+}
