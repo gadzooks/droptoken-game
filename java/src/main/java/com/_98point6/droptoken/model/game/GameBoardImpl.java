@@ -187,6 +187,30 @@ public class GameBoardImpl implements GameBoard{
         if(allSlotsFull()) {
             setStatus(GameBoardImpl.GameState.DONE);
         }
+
+        //diagonals match
+        //need at least 10 moves for this to match
+        if(moves.size() >= 10) {
+            // check (0,0), (1,1) etc
+            if(!StringUtils.isEmpty(matrix[0][0]) &&
+                    (matrix[0][0].equals(matrix[1][1])) &&
+                    (matrix[0][0].equals(matrix[2][2])) &&
+                    (matrix[0][0].equals(matrix[3][3]))
+            ) {
+                setGameWonBy(matrix[0][0]);
+                return;
+            }
+
+            // check (3,0),(2,1),(1,2) and (0, 3)
+            if(!StringUtils.isEmpty(matrix[3][0]) &&
+                    (matrix[3][0].equals(matrix[2][1])) &&
+                    (matrix[3][0].equals(matrix[1][2])) &&
+                    (matrix[3][0].equals(matrix[0][3]))
+            ) {
+                setGameWonBy(matrix[3][0]);
+                return;
+            }
+        }
     }
 
     private void setGameWonBy(String playerId) {

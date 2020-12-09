@@ -213,4 +213,61 @@ class GameBoardImplTest {
         assertNull(game.getWinner());
     }
 
+    @SneakyThrows
+    @Test
+    public void testGetGame_diagonalMatches1() {
+        // GIVEN
+        GameBoard game = new GameBoardImpl(PLAYERS, columns, rows);
+        assertEquals("IN_PROGRESS", game.getStatus());
+        assertNull(game.getWinner());
+
+        // WHEN
+        // fill up row 0
+        game.postMove(P1, 0);
+
+        game.postMove(P2, 1);
+        game.postMove(P1, 1);
+
+        game.postMove(P2, 2);
+        game.postMove(P1, 2);
+
+        game.postMove(P2, 3);
+        game.postMove(P1, 2);
+        game.postMove(P2, 3);
+        game.postMove(P1, 3);
+        game.postMove(P2, 0);
+        game.postMove(P1, 3);
+
+        assertEquals("DONE", game.getStatus());
+        assertEquals(P1, game.getWinner());
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGetGame_diagonalMatches_reverseOrder() {
+        // GIVEN
+        GameBoard game = new GameBoardImpl(PLAYERS, columns, rows);
+        assertEquals("IN_PROGRESS", game.getStatus());
+        assertNull(game.getWinner());
+
+        // WHEN
+        game.postMove(P2, 3);
+        game.postMove(P1, 2);
+        game.postMove(P2, 2);
+
+        game.postMove(P1, 1);
+        game.postMove(P2, 1);
+
+        game.postMove(P1, 0);
+        game.postMove(P2, 1);
+        game.postMove(P1, 0);
+        game.postMove(P2, 0);
+        game.postMove(P1, 3);
+        game.postMove(P2, 0);
+
+        assertEquals("DONE", game.getStatus());
+        assertEquals(P2, game.getWinner());
+    }
+
+
 }
