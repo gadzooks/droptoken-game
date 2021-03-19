@@ -7,24 +7,27 @@ import com._98point6.droptoken.model.game.GameBoard;
 import com._98point6.droptoken.model.game.GameBoardImpl;
 import org.eclipse.jetty.server.Response;
 
-import java.util.HashMap;
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+@ThreadSafe
 public class DropTokenServiceImpl implements DropTokenService {
     // if multiple instances of Service are created they all need to share the same games map so
     // it needs to be declared as static
-    private static final Map<UUID, GameBoard> games = new HashMap<>();
+    // volatile : we dont want threads caching games since games can be changed by other threads.
+    private static volatile Map<UUID, GameBoard> games = new ConcurrentHashMap<>();
 
     @Override
     public GameBoard createGame(final List<String> players, final int rows, final int columns)
             throws DropTokenException {
         try {
-            GameBoard board = new GameBoardImpl(players, rows, columns);
-            UUID id = board.getId();
-            games.put(id, board);
+            final GameBoard board = new GameBoardImpl(players, rows, columns);
+            final UUID id = board.getId();
+            addGame(id, board);
             return board;
         } catch(GameBoard.MalformedGameRequestException e) {
             throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
@@ -33,7 +36,7 @@ public class DropTokenServiceImpl implements DropTokenService {
 
     @Override
     public List<String> getGames() {
-        return games.
+        return getAllGames().
                 values().
                 stream().
                 map(GameBoard::getId).
@@ -66,7 +69,8 @@ public class DropTokenServiceImpl implements DropTokenService {
     @Override
     public GameBoard findById(String gameId) throws DropTokenException {
         // catch IllegalArgumentException in fromString
-        GameBoard game = games.get(UUID.fromString(gameId));
+        UUID id = UUID.fromString(gameId);
+        GameBoard game = getGame(id);
         if (game == null) {
             throw new DropTokenException(Response.SC_NOT_FOUND, "Games/moves not found.");
         }
@@ -119,5 +123,17 @@ public class DropTokenServiceImpl implements DropTokenService {
         } catch (GameBoard.MalformedInputException e) {
             throw new DropTokenException(Response.SC_BAD_REQUEST, e.getMessage(), e);
         }
+    }
+
+    private static void addGame(UUID id, GameBoard game) {
+        games.put(id, game);
+    }
+
+    private static GameBoard getGame(UUID id) {
+        return games.get(id);
+    }
+
+    private static Map<UUID, GameBoard> getAllGames() {
+        return games;
     }
 }
